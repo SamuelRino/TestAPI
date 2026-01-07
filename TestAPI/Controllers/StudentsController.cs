@@ -79,7 +79,24 @@ namespace TestAPI.Controllers
 
             foreach (var student in students)
             {
-                if (student.Course < 5)
+                Regex regex = new Regex(@"ТМП-(\d)(\d*)");
+
+                Match tmp = regex.Match(student.Group);
+
+                bool isTMP = tmp.Success;
+
+                bool canUpCourse = false;
+
+                if (isTMP)
+                {
+                    canUpCourse = student.Course < 5;
+                }
+                else
+                {
+                    canUpCourse = student.Course < 4;
+                }
+
+                if (canUpCourse)
                 {
                     student.Group = Regex.Replace(student.Group, @"(\d)(\d*)", match =>
                     {
