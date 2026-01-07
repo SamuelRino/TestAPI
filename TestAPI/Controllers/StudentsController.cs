@@ -11,7 +11,7 @@ namespace TestAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class StudentsController : ControllerBase // Измените на ControllerBase
+    public class StudentsController : ControllerBase
     {
         private readonly StudentsContext _context;
 
