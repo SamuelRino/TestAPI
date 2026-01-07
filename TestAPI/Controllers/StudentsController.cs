@@ -80,9 +80,11 @@ namespace TestAPI.Controllers
             foreach (var student in students)
             {
                 if (student.Course < 5)
-                {                   
+                {
+                    student.Course++;
 
                     student.Group = Regex.Replace(student.Group, @"(\d)(\d*)", match =>
+
                     {
                         int course = Convert.ToInt32(match.Groups[1].Value);
 
@@ -93,7 +95,7 @@ namespace TestAPI.Controllers
 
                         string number = match.Groups[2].Value;
 
-                        return $"{course+1}{number}";
+                        return $"{course + 1}{number}";
                     });
 
                     student.Course++;
