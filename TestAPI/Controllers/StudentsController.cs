@@ -84,7 +84,6 @@ namespace TestAPI.Controllers
                     student.Course++;
 
                     student.Group = Regex.Replace(student.Group, @"(\d)(\d*)", match =>
-
                     {
                         int course = Convert.ToInt32(match.Groups[1].Value);
 
