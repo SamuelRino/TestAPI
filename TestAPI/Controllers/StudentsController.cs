@@ -92,7 +92,7 @@ namespace TestAPI.Controllers
                             course = student.Course;
                         }
 
-                        string number = match.Groups[2].Value;
+                                        string number = match.Groups[2].Value;
 
                         return $"{course + 1}{number}";
                     });
