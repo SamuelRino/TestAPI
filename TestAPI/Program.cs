@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using System.Text.Json.Serialization;
+using TestAPI;
 using TestAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +21,25 @@ builder.Services.AddCors(options =>
         builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
+
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = AuthOptionns.ISSUER,
+        ValidateAudience = true,
+        ValidAudience = AuthOptionns.AUDIENCE,
+        ValidateLifetime = true,
+        IssuerSigningKey = AuthOptionns.GetSymmetricSecurityKey(),
+        ValidateIssuerSigningKey = true
+    };
+});
+
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 string connection = @"server=localhost\sqlexpress; user=исп-31; password=1234567890; database=Students";
 
@@ -36,8 +59,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+
+public class AuthOptionns
+{
+    public const string ISSUER = "ServeR";
+    public const string AUDIENCE = "VIPKS_3";
+    const string KEY = "papavepegemabodi88005553535!damedanedamuyo";
+    public static SymmetricSecurityKey GetSymmetricSecurityKey() => new SymmetricSecurityKey(Encoding.UTF8.GetBytes(KEY)); 
+}
