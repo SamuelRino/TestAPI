@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Azure.Identity;
+﻿using Azure.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Common;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 using TestAPI.Models;
 
 namespace TestAPI.Controllers
@@ -97,5 +99,58 @@ namespace TestAPI.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("change-role")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleRequest request)
+        {
+            if (request.NewRole != 1 && request.NewRole != 2)
+            {
+                return BadRequest(new { message = "Роль должна быть 1 (админ) или 2 (пользователь)" });
+            }
+
+            var currentUserLogin = User.Identity?.Name;
+
+            if (currentUserLogin == request.Login)
+            {
+                return BadRequest(new { message = "Нельзя изменить роль самому себе" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserLogin == request.Login);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "Пользователь не найден" });
+            }
+
+            if (user.UserRole == 1 && request.NewRole == 2)
+            {
+                var remainingAdmins = await _context.Users.CountAsync(u => u.UserRole == 1 && u.UserLogin != request.Login);
+
+                if (remainingAdmins == 0)
+                {
+                    return BadRequest(new { message = "Нельзя удалить последнего администратора" });
+                }
+            }
+
+            user.UserRole = (byte)request.NewRole;
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Роль успешно изменена",
+                newRole = request.NewRole
+            });
+        }
+    }
+
+    public class ChangeRoleRequest
+    {
+        [Required(ErrorMessage = "Логин обязателен")]
+        public string Login { get; set; }
+
+        [Required(ErrorMessage = "Роль обязательна")]
+        [Range(1, 2, ErrorMessage = "Роль должна быть 1 или 2")]
+        public int NewRole { get; set; }
     }
 }

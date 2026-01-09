@@ -1,17 +1,19 @@
-﻿using System;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using TestAPI.Models;
 
 namespace TestAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class StudentsController : ControllerBase
     {
         private readonly StudentsContext _context;
@@ -157,7 +159,7 @@ namespace TestAPI.Controllers
             if (student == null)
             {
                 return NotFound();
-            }
+            }            
 
             _context.Students.Remove(student);
             await _context.SaveChangesAsync();
