@@ -40,7 +40,7 @@ namespace TestAPI.Controllers
         {
             await _context.Roles.LoadAsync();
 
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users.Include(u => u.UserRoleNavigation).FirstOrDefaultAsync(u => u.UserId == id);
 
             if (user == null)
             {
@@ -60,7 +60,7 @@ namespace TestAPI.Controllers
                 return BadRequest();
             }
 
-            var oldUser = await _context.Users.FindAsync(id);
+            var oldUser = await _context.Users.Include(u => u.UserRoleNavigation).AsNoTracking().FirstOrDefaultAsync(u => u.UserId == id);
 
             if (oldUser == null) return NotFound();
 
@@ -80,10 +80,13 @@ namespace TestAPI.Controllers
                 user.UserPassword = hashedPassword;
             }
 
-            var usernameExists = await _context.Users.AnyAsync(u => u.Username == user.Username);
-            if (usernameExists)
+            if (oldUser.Username != user.Username)
             {
-                return BadRequest(new { message = "Username уже существует" });
+                var usernameExists = await _context.Users.AnyAsync(u => u.Username == user.Username);
+                if (usernameExists)
+                {
+                    return BadRequest(new { message = "Такой username уже существует" });
+                }
             }
 
             _context.Entry(user).State = EntityState.Modified;
@@ -112,7 +115,7 @@ namespace TestAPI.Controllers
         [Authorize(Roles = "admin")]
         public async Task<ActionResult<User>> PostUser(User user)
         {
-            var usernameExists = await _context.Users.AnyAsync(u => u.Username == user.Username);
+            var usernameExists = await _context.Users.Include(u => u.UserRoleNavigation).AnyAsync(u => u.Username == user.Username);
             if (usernameExists)
             {
                 return BadRequest(new { message = "Username уже существует" });
@@ -129,7 +132,7 @@ namespace TestAPI.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteUser(byte id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users.Include(u => u.UserRoleNavigation).FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null)
             {
                 return NotFound();
